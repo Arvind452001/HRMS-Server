@@ -11,7 +11,7 @@ const seedAdmin = async () => {
     await mongoose.connect(process.env.MONGO_URI);
 
     const existingAdmin = await Employee.findOne({
-      email: "admin.company@gmail.com",
+      email: "hr.company@gmail.com",
     });
 
     if (existingAdmin) {
@@ -19,13 +19,13 @@ const seedAdmin = async () => {
       process.exit(0);
     }
 
-    const hashedPassword = await bcrypt.hash("Admin@#123", 10);
+    const hashedPassword = await bcrypt.hash("Hr@#12345", 10);
 
     await Employee.create({
       name: "System Admin",
-      email: "admin.company@gmail.com",
+      email: "hr.company@gmail.com",
       password: hashedPassword,
-      role: "admin",
+      role: "hr",
       status: "approved",
       isActive: true,
       emailVerified: true,

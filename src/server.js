@@ -1,5 +1,6 @@
 import express from "express";
 import visitorRoutes from "./routes/visitor.Routes.js";
+import authRoutes from "./routes/auth.routes.js";
 import cors from "cors";
 
 import dotenv from "dotenv";
@@ -25,7 +26,7 @@ app.get("/", (req, res) => {
 
 // routes
 app.use("/api/visitor", visitorRoutes);
-// app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 // app.use("/api/employees", employeeRoutes);
 // app.use("/api/admin", adminRoutes);
 // app.use("/api/jobs", jobRoutes);

@@ -1,4 +1,5 @@
 import Visitor from "../../models/Visitor.js";
+import mongoose from "mongoose";
 
 /* ================= CREATE ================= */
 
@@ -86,15 +87,20 @@ export const createVisitor = async (req, res) => {
 };
 
 /* ================= GET WITH FILTER ================= */
+
 export const getVisitors = async (req, res) => {
   try {
-    const { type, status, search } = req.query;
+    const { type, status, search, page = 1, limit = 10 } = req.query;
 
     let filter = {};
 
+    // Filter by type
     if (type) filter.type = type;
+
+    // Filter by status
     if (status) filter.status = status;
 
+    // Search
     if (search) {
       filter.$or = [
         { fullName: { $regex: search, $options: "i" } },
@@ -103,10 +109,20 @@ export const getVisitors = async (req, res) => {
       ];
     }
 
-    const visitors = await Visitor.find(filter).sort({ createdAt: -1 });
+    const skip = (Number(page) - 1) * Number(limit);
 
-    res.json({
+    const visitors = await Visitor.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    const total = await Visitor.countDocuments(filter);
+
+    res.status(200).json({
       success: true,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit),
       count: visitors.length,
       data: visitors,
     });
@@ -118,10 +134,23 @@ export const getVisitors = async (req, res) => {
   }
 };
 
+
 /* ================= GET BY ID ================= */
+/* ================= GET VISITOR BY ID ================= */
+
 export const getVisitorById = async (req, res) => {
   try {
-    const visitor = await Visitor.findById(req.params.id);
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid visitor ID",
+      });
+    }
+
+    const visitor = await Visitor.findById(id);
 
     if (!visitor) {
       return res.status(404).json({
@@ -130,7 +159,7 @@ export const getVisitorById = async (req, res) => {
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
       data: visitor,
     });
@@ -142,17 +171,13 @@ export const getVisitorById = async (req, res) => {
   }
 };
 
-/* ================= APPROVE + SET PASSWORD ================= */
-export const approveVisitor = async (req, res) => {
-  try {
-    const { password } = req.body;
 
-    if (!password) {
-      return res.status(400).json({
-        success: false,
-        message: "Password is required",
-      });
-    }
+/* ================= APPROVE + SET PASSWORD ================= */
+export const updateVisitorStatus = async (req, res) => {
+  console.log("api updateVisitorStatus")
+  try {
+    const { status, password } = req.body;
+    console.log(status, password)
 
     const visitor = await Visitor.findById(req.params.id);
 
@@ -163,14 +188,25 @@ export const approveVisitor = async (req, res) => {
       });
     }
 
-    visitor.status = "approved";
-    visitor.password = password; // will auto hash
+    // If approving, password required
+    if (status === "approved") {
+      if (!password) {
+        return res.status(400).json({
+          success: false,
+          message: "Password is required for approval",
+        });
+      }
+
+      visitor.password = password; // will auto hash
+    }
+
+    visitor.status = status;
 
     await visitor.save();
 
     res.json({
       success: true,
-      message: "Visitor approved successfully",
+      message: `Visitor ${status} successfully`,
     });
   } catch (error) {
     res.status(500).json({

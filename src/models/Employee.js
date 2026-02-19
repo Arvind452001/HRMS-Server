@@ -151,4 +151,9 @@ const employeeSchema = new mongoose.Schema(
   },
 );
 
-export default mongoose.model("Employee", employeeSchema);
+// ✅ Safe export
+const Employee =
+  mongoose.models.Employee ||
+  mongoose.model("Employee", employeeSchema);
+
+export default Employee;

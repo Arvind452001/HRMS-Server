@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { sendEmail } from "../utils/sendEmail.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
 import { verifyEmailOtpTemplate } from "../utils/emailTemplates/verifyEmailOtp.js";
-import Employee from "../models/Employee.js";
+import Employee from "../models/employee.js";
 
 
 ////////------------------LOGIN --------------------//////////
